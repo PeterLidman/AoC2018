@@ -12,16 +12,6 @@ import java.util.Map;
 
 public class Dag4 {
 	static List<String> log = new ArrayList<String>();
-	static GuardSleep onDuty = null;
-	static HashMap<Integer, GuardSleep> GuardTeam = new HashMap<Integer, GuardSleep>();
-	static int i = 0;
-	static int startklocka = 0;
-	static int stoppklocka = 0;
-	static int maxSleep = 0;
-	static int maxMinute = 0;
-	static int idTimesMaxSleep = 0;
-	static int idTimesBestMinute = 0;
-	static int guard = 0;
 
 	public static void main(final String[] args) throws IOException {
 		String str;
@@ -32,22 +22,28 @@ public class Dag4 {
 		}
 		br.close();
 		del1();
-		del2();
 	}
 
 	public static void del1() {
+		GuardSleep onDuty = null;
+		HashMap<Integer, GuardSleep> guardTeam = new HashMap<Integer, GuardSleep>();
+		int i = 0;
+		int guard = 0;
+		int startklocka = 0;
+		int stoppklocka = 0;
+		int maxSleep = 0;
+		int mostMinute = 0;
+		int idTimesMaxSleep = 0;
+		int idTimesBestMinute = 0;
+
 		log.sort(Comparator.naturalOrder());
 
 		do {
-//			System.out.println("start do");
-			if (log.get(i).charAt(25) == '#') { // next elf
+			if (log.get(i).charAt(25) == '#') { // next elf guard
 				guard = Integer.parseInt(log.get(i).substring(26).split(" ")[0]);
-				if ((onDuty = GuardTeam.get(guard)) == null) {
+				if ((onDuty = guardTeam.get(guard)) == null) {
 					onDuty = new GuardSleep();
-					GuardTeam.put(guard, onDuty);
-//					System.out.println("newguard " + guard);
-				} else {
-//					System.out.println("oldguard " + guard);
+					guardTeam.put(guard, onDuty);
 				}
 			} else { // get sleep cycle
 				startklocka = Integer.parseInt(log.get(i).substring(15, 17));
@@ -55,36 +51,26 @@ public class Dag4 {
 				for (int j = startklocka; j < stoppklocka; j++) {
 					onDuty.addSleep(j);
 				}
-//				System.out.println("sleepcycle");
-//				onDuty.printSleep();
 			}
 		} while (++i < log.size() - 1);
 
-		for (Map.Entry<Integer, GuardSleep> entry : GuardTeam.entrySet()) {
-			Integer key = entry.getKey();
-			GuardSleep value = entry.getValue();
-//			System.out.println("key=" + key);
-//			value.printSleep();
-//			System.out.println("");
+		for (Map.Entry<Integer, GuardSleep> entry : guardTeam.entrySet()) {
+			Integer guardNr = entry.getKey();
+			GuardSleep guardSleep = entry.getValue();
 
-			if (value.sumSleep() > maxSleep) {
-				maxSleep = value.sumSleep();
-				// System.out.println("maxs" + maxSleep + "id " + key);
-				idTimesMaxSleep = value.bestMinute() * key;
+			if (guardSleep.sumSleep() > maxSleep) {
+				maxSleep = guardSleep.sumSleep();
+				idTimesMaxSleep = guardSleep.bestMinute() * guardNr;
 			}
-			if (value.bestMinute() >= maxMinute) {
-				// value.printSleep();
-				maxMinute = value.bestMinute();
-				// System.out.println("maxm" + maxMinute + "id " + key);
-				idTimesBestMinute = maxMinute * key;
+			if (guardSleep.mostSleepMinute() >= mostMinute) {
+				mostMinute = guardSleep.mostSleepMinute();
+				idTimesBestMinute = guardSleep.bestMinute() * guardNr;
 			}
 		}
-		System.out.println("ID * best minute: max sum sleep " + idTimesMaxSleep);
+		System.out.println("Sleepiest guard: " + idTimesMaxSleep);
+		System.out.println("Sleepiest minute: " + idTimesBestMinute);
 	}
 
-	public static void del2() {
-		System.out.println("ID * best minute: max best minute " + idTimesBestMinute);
-	}
 }
 
 class GuardSleep {
@@ -102,13 +88,6 @@ class GuardSleep {
 		return s;
 	}
 
-	public void printSleep() {
-		for (int i = 0; i < 60; i++) {
-			System.out.print("[" + i + ":" + minuter[i] + "]");
-		}
-		System.out.println("");
-	}
-
 	public int bestMinute() {
 		int s = 0;
 		int max = 0;
@@ -120,4 +99,15 @@ class GuardSleep {
 		}
 		return s;
 	}
+
+	public int mostSleepMinute() {
+		int max = 0;
+		for (int i = 0; i < 60; i++) {
+			if (minuter[i] > max) {
+				max = minuter[i];
+			}
+		}
+		return max;
+	}
+
 }
