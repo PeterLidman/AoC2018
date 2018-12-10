@@ -4,63 +4,50 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Dag1 {
-	public static void main(String[] args) {
+	static List<Integer> frekvensJusteringar = new ArrayList<Integer>();
+
+	public static void main(String[] args) throws IOException {
+		String str;
+		FileInputStream in = new FileInputStream("C:\\git\\AoC2018\\Dag1\\src\\dag1\\input.txt");
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		while ((str = br.readLine()) != null) {
+			frekvensJusteringar.add(Integer.parseInt(str));
+		}
+		br.close();
 		del1();
 		del2();
 	}
 
 	public static void del1() {
-		String str;
 		int sum = 0;
-		FileInputStream in;
 
-		try {
-			in = new FileInputStream("C:\\git\\AoC2018\\Dag1\\src\\dag1\\input.txt");
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-			while ((str = br.readLine()) != null) {
-				sum = sum + Integer.parseInt(str);
-			}
-			System.out.println("Frekvens: " + sum);
-			br.close();
-		} catch (IOException e) {
-			System.out.println("Hade problem med att läsa filen.");
+		for (Integer frekvens : frekvensJusteringar) {
+			sum += frekvens;
 		}
+		System.out.println("Frekvens: " + sum);
 	}
 
 	public static void del2() {
-		String str;
 		int sum = 0;
-		HashMap<Integer, Integer> h = new HashMap<Integer, Integer>();
+		Set<Integer> frekvenser = new HashSet<>();
 		boolean found = false;
-		FileInputStream in;
-		h.put(0, 0);
+		frekvenser.add(0);
 
-		try {
-			in = new FileInputStream("C:\\git\\AoC2018\\Dag1\\src\\dag1\\input.txt");
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
-			br.mark(10000);
-
-			do {
-				while ((str = br.readLine()) != null) {
-					sum = sum + Integer.parseInt(str);
-					if (h.get(sum) == null) {
-						h.put(sum, sum);
-					} else {
-						found = true;
-						System.out.println("Första dubbletten: " + sum);
-						break;
-					}
+		do {
+			for (Integer frekvens : frekvensJusteringar) {
+				sum += frekvens;
+				if (found = !frekvenser.add(sum)) {
+					break;
 				}
-				br.reset();
-			} while (!found);
-			br.close();
-		} catch (IOException e) {
-			System.out.println("Hade problem med att läsa filen.");
-		}
+			}
+		} while (!found);
+		System.out.println("Första dubbletten: " + sum);
 	}
 
 }
