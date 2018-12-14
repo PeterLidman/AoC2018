@@ -18,11 +18,9 @@ public class Dag13 {
 		final BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		int i = 0;
 		int j = 0;
-		int k = 0;
 		char c;
 		boolean crash = false;
 		Cart s;
-		Cart t;
 
 		while ((str = br.readLine()) != null) {
 			for (i = 0; i < 150; i++) {
@@ -73,6 +71,8 @@ public class Dag13 {
 				s = carts.get(i);
 				System.out.println(String.valueOf(s.direction) + " " + s.lastIntersection + " " + s.x + " " + s.y);
 				switch (s.direction) {
+				case 'X':
+					break;
 				case '^':
 					s.y--;
 					if (mm[s.x][s.y] == '/') {
@@ -147,13 +147,13 @@ public class Dag13 {
 					break;
 				}
 				getCollision();
-				if (carts.size() == 1) {
-					crash = true;
-					System.out.println("krock " + s.x + " , " + s.y);
-					System.out.println(String.valueOf(carts.get(0).direction) + "xy " + carts.get(0).x + "," + carts.get(0).y);
+			}
+			removeWrecks();
+			if (carts.size() == 1) {
+				crash = true;
+				System.out.println(
+						String.valueOf(carts.get(0).direction) + "xy " + carts.get(0).x + "," + carts.get(0).y);
 
-					break;
-				}
 			}
 		}
 	}
@@ -166,13 +166,27 @@ public class Dag13 {
 			for (int j = i + 1; j < carts.size(); j++) {
 				c2 = carts.get(j);
 				if (c1.x == c2.x && c1.y == c2.y) {
-					carts.remove(j);
-					carts.remove(i);
+					c1.direction = 'X';
+					c2.direction = 'X';
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	private static void removeWrecks() {
+		Cart c1;
+		int i = 0;
+		do {
+			c1 = carts.get(i);
+			if (c1.direction == 'X') {
+				carts.remove(i);
+
+			} else {
+				i++;
+			}
+		} while (i < carts.size());
 	}
 
 	private static void print() {
