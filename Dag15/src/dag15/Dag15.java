@@ -16,7 +16,7 @@ public class Dag15 {
 	static char[][] populatedDungeon;
 	static int sizeX = 0;
 	static int sizeY = 0;
-	static int modifiedElfDamage = 4;
+	static int modifiedElfDamage = 3;
 	static boolean deadElves = true;
 
 	public static void main(final String[] args) throws IOException {
@@ -40,7 +40,6 @@ public class Dag15 {
 		do {
 			for (i = 0; i < sizeX; i++) {
 				c = input.get(j).charAt(i);
-				// populatedDungeon[i][j] = c;
 				switch (c) {
 				case 'E':
 					combatUnit.add(new CombatUnit(i, j, 'E'));
@@ -58,18 +57,13 @@ public class Dag15 {
 		for (CombatUnit cus : combatUnit) {
 			freshUnits.add(new CombatUnit(cus.x, cus.y, cus.affinity));
 		}
-
-//		print();
-//		populate();
-		// printPopulated();
-
-		while (deadElves) {
+		while (deadElves) {//comment out for part1
 			combatUnit.clear();
 			for (CombatUnit cus : freshUnits) {
 				combatUnit.add(new CombatUnit(cus.x, cus.y, cus.affinity));
 				System.out.println(cus.affinity + " hp " + cus.hp);
 			}
-			modifiedElfDamage++;
+			modifiedElfDamage++;//comment out for part1
 			deadElves = false;
 			populate();
 			i = 0;
@@ -84,8 +78,8 @@ public class Dag15 {
 				System.out.println("dmg unit" + cw.hp);
 				j += cw.hp;
 			}
-			System.out.println("Battle result " + j * i + " no dead elves with modified damage " + modifiedElfDamage);
-		}
+			System.out.println("Battle result " + j * i + ", Modified damage " + modifiedElfDamage);
+		}//comment out for part1
 	}
 
 	private static boolean moveAndOrFight() {
@@ -96,7 +90,6 @@ public class Dag15 {
 		for (int i = 0; i < combatUnit.size(); i++) {// traverse all combatants
 			cu = combatUnit.get(i);
 			if (cu.affinity != '.') {// dead don't fight
-
 				if (!fightAdjacentOpponents(cu)) {
 					// move and then fight
 					populate();
