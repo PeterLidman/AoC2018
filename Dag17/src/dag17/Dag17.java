@@ -12,18 +12,18 @@ public class Dag17 {
 	static char[][] g;
 	static int dimensionX;
 	static int dimensionY;
-//	static int maxX = 552;
-//	static int minX = 332;
-//	static int maxY = 1622;
-//	static int minY = 3;
-	static int maxX = 506;
-	static int minX = 495;
-	static int maxY = 13;
-	static int minY = 0;
+	static int maxX = 552;
+	static int minX = 332;
+	static int maxY = 1622;
+	static int minY = 3;
+//	static int maxX = 506;
+//	static int minX = 495;
+//	static int maxY = 13;
+//	static int minY = 0;
 
 	public static void main(final String[] args) throws IOException {
 		String str;
-		final FileInputStream in = new FileInputStream("C:\\git\\AoC2018\\Dag17\\src\\dag17\\input2.txt");
+		final FileInputStream in = new FileInputStream("C:\\git\\AoC2018\\Dag17\\src\\dag17\\input1.txt");
 		final BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		while ((str = br.readLine()) != null) {
 			input.add(str);
