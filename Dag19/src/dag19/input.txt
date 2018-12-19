@@ -7,7 +7,7 @@ eqrr 1 4 1
 addr 1 3 3
 addi 3 1 3
 addr 5 0 0
-addi 2 1 2
+addi 2 10551378 2
 gtrr 2 4 1
 addr 3 1 3
 seti 2 3 3
