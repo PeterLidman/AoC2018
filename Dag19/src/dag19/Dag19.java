@@ -29,20 +29,20 @@ public class Dag19 {
 		eop = program.size();
 
 		String[] instr;
-r[0]=1;//del2
+//r[0]=1;//del2 tar för lång tid
 		do {
-			// clock cycle
 			r[ip] = pc;// init
-
-			//System.out.println("ip=" + pc +"[" + r[0] + "," + r[1] + "," + r[2] + "," + r[3]+ "," + r[4]+ "," + r[5] + "]");
+			// System.out.println("ip=" + pc +"[" + r[0] + "," + r[1] + "," + r[2] + "," +
+			// r[3]+ "," + r[4]+ "," + r[5] + "]");
 			instr = program.get(pc).substring(5).split(" ");
 			i[0] = 0;
 			i[1] = Integer.valueOf(instr[0]);
 			i[2] = Integer.valueOf(instr[1]);
 			i[3] = Integer.valueOf(instr[2]);
-			//System.out.println(program.get(pc).substring(0, 4) + " " + i[1] + " " + i[2] + " " + i[3]);
-			System.out.print(program.get(pc).substring(0, 4) + " " + i[1] + " " + i[2] + " " + i[3] + " ");
-
+			// System.out.println(program.get(pc).substring(0, 4) + " " + i[1] + " " + i[2]
+			// + " " + i[3]);
+			// System.out.print(program.get(pc).substring(0, 4) + " " + i[1] + " " + i[2] +
+			// " " + i[3] + " ");
 			switch (program.get(pc).substring(0, 4)) {
 			case "addr":
 				r[i[3]] = r[i[1]] + r[i[2]];
@@ -95,11 +95,32 @@ r[0]=1;//del2
 			default:
 				System.out.println("got unknown opcode");
 			}
-		System.out.println("ip=" + pc +"[" + r[0] + "," + r[1] + "," + r[2] + "," + r[3]+ "," + r[4]+ "," + r[5] + "]");
-
-			
+//		System.out.println("ip=" + pc +"[" + r[0] + "," + r[1] + "," + r[2] + "," + r[3]+ "," + r[4]+ "," + r[5] + "]");
 			pc = r[ip] + 1;
 		} while (pc < eop);
 		System.out.println("End of program r0= >10551378 " + r[0]);
+
+		int r0 = 1;
+		int r1 = 0;
+		int r2 = 0;
+		int r4 = 0;
+		int r5 = 0;
+
+		r4 = 10551378; // programmet letar de faktorer som bildar tal upp till r4
+		r0 = 0;
+
+		r5 = 1;
+		do {
+			r2 = r4 / r5;// snabba på startvärdet
+			do {
+				r1 = r5 * r2;
+				if (r1 == r4) {
+					r0 = r0 + r5;
+				}
+				r2++;
+			} while (r2 <= r4 / r5);// avsluta tidigare
+			r5++;
+		} while (r5 <= r4);
+		System.out.println("Part II r0= " + r0);
 	}
 }
