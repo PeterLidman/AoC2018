@@ -4,41 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-enum DamageType {
-	RADIATION, BLUDGEONING, FIRE, SLASHING, COLD;
-}
-
-class CombatUnit {
-	int numberOfUnits, hitPointsEach, attackDamage, initiative;
-	DamageType attackType, weakness1 = null, weakness2 = null, immune1 = null, immune2 = null;
-	int targetSelected = -1;
-	boolean targeted = false;
-	int groupNr;
-
-	public CombatUnit(int numberOfUnits, int hitPointsEach, int attackDamage, int initiative, DamageType attackType,
-			DamageType weakness1, DamageType weakness2, DamageType immune1, DamageType immune2, int groupNr) {
-		super();
-		this.numberOfUnits = numberOfUnits;
-		this.hitPointsEach = hitPointsEach;
-		this.attackDamage = attackDamage;
-		this.initiative = initiative;
-		this.attackType = attackType;
-		this.weakness1 = weakness1;
-		this.weakness2 = weakness2;
-		this.immune1 = immune1;
-		this.immune2 = immune2;
-		this.groupNr = groupNr;
-	}
-
-	@Override
-	public String toString() {
-		return "CombatUnit [numberOfUnits=" + numberOfUnits + ", hitPointsEach=" + hitPointsEach + ", attackDamage="
-				+ attackDamage + ", initiative=" + initiative + ", attackType=" + attackType + ", weakness1="
-				+ weakness1 + ", weakness2=" + weakness2 + ", immune1=" + immune1 + ", immune2=" + immune2
-				+ ", targetSelected=" + targetSelected + ", targeted=" + targeted + ", groupNr=" + groupNr + "]";
-	}
-}
-
 public class Dag24 {
 	static List<CombatUnit> immuneSystem = new ArrayList<>();
 	static List<CombatUnit> infection = new ArrayList<>();
@@ -89,25 +54,27 @@ public class Dag24 {
 
 		int maxDamage, dmg, defdmg, initative, maxInitative;
 		int chosen, receiver = 0, maxdefendingEffectivePower;
-		List<CombatUnit> temp = new ArrayList<>();
+		final List<CombatUnit> temp = new ArrayList<>();
 		do {
 
 			// re-init
-			for (CombatUnit cu : immuneSystem) {
-				cu.targeted = false;
-				cu.targetSelected = -1;
+			for (final CombatUnit cu : immuneSystem) {
+				cu.setTargeted(false);
+				cu.setTargetSelected(-1);
 			}
-			for (CombatUnit cu : infection) {
-				cu.targeted = false;
-				cu.targetSelected = -1;
+			for (final CombatUnit cu : infection) {
+				cu.setTargeted(false);
+				cu.setTargetSelected(-1);
 			}
 
 			System.out.println("---------------------------------------");
-			for (CombatUnit c : immuneSystem) {
-				System.out.println("immune    group " + c.groupNr + " contains " + c.numberOfUnits + " units");
+			for (final CombatUnit c : immuneSystem) {
+				System.out
+						.println("immune    group " + c.getGroupNr() + " contains " + c.getNumberOfUnits() + " units");
 			}
-			for (CombatUnit c : infection) {
-				System.out.println("infection group " + c.groupNr + " contains " + c.numberOfUnits + " units");
+			for (final CombatUnit c : infection) {
+				System.out
+						.println("infection group " + c.getGroupNr() + " contains " + c.getNumberOfUnits() + " units");
 			}
 			System.out.println("---------------------------------------");
 
@@ -119,18 +86,13 @@ public class Dag24 {
 				maxDamage = 0;
 				maxInitative = 0;
 				for (int i = 0; i < infection.size(); i++) {
-					dmg = infection.get(i).numberOfUnits * infection.get(i).attackDamage;
-					initative = infection.get(i).initiative;
-					if (infection.get(i).targetSelected < 0) {// ignore already considered
-						if (maxDamage < dmg) {
-							maxDamage = dmg;
-							maxInitative = initative;
-							chosen = i;
-						} else if (maxDamage == dmg && maxInitative < initative) {
-							maxDamage = dmg;
-							maxInitative = initative;
-							chosen = i;
-						}
+					dmg = infection.get(i).getNumberOfUnits() * infection.get(i).getAttackDamage();
+					initative = infection.get(i).getInitiative();
+					if ((infection.get(i).getTargetSelected() < 0)
+							&& ((maxDamage < dmg) || ((maxDamage == dmg) && (maxInitative < initative)))) {
+						maxDamage = dmg;
+						maxInitative = initative;
+						chosen = i;
 					}
 				}
 				if (chosen < 0) {
@@ -141,49 +103,37 @@ public class Dag24 {
 				maxInitative = 0;
 				maxdefendingEffectivePower = 0;
 				for (int i = 0; i < immuneSystem.size(); i++) {
-					if (immuneSystem.get(i).immune1 == infection.get(chosen).attackType
-							|| immuneSystem.get(i).immune2 == infection.get(chosen).attackType
-							|| immuneSystem.get(i).targeted == true) {
-
+					if (immuneSystem.get(i).isTargeted()) {
+						continue;
+					}
+					if (immuneSystem.get(i).getImmune1() == infection.get(chosen).getAttackType()
+							|| immuneSystem.get(i).getImmune2() == infection.get(chosen).getAttackType()) {
+						dmg = 0;// this is important not to finish loop to early, need to select something
+					} else if (immuneSystem.get(i).getWeakness1() == infection.get(chosen).getAttackType()
+							|| immuneSystem.get(i).getWeakness2() == infection.get(chosen).getAttackType()) {
+						dmg = infection.get(chosen).getNumberOfUnits() * infection.get(chosen).getAttackDamage() * 2;
 					} else {
-						if (immuneSystem.get(i).weakness1 == infection.get(chosen).attackType
-								|| immuneSystem.get(i).weakness2 == infection.get(chosen).attackType) {
-							dmg = infection.get(chosen).numberOfUnits * infection.get(chosen).attackDamage * 2;
-						} else {
-							dmg = infection.get(chosen).numberOfUnits * infection.get(chosen).attackDamage;
-						}
-						initative = immuneSystem.get(i).initiative;
-						defdmg = immuneSystem.get(i).numberOfUnits * immuneSystem.get(i).attackDamage;
-						System.out.println("Infection group " + infection.get(chosen).groupNr + " -> "
-								+ immuneSystem.get(i).groupNr + " (" + dmg + " damage) (" + defdmg
-								+ " effective power) (" + initative + " initiative)");
-						// if (dmg > immuneSystem.get(i).hitPointsEach) {// FML
-						if (maxDamage < dmg) {
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						} else if (maxDamage == dmg && maxdefendingEffectivePower < defdmg) {
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						} else if (maxDamage == dmg && maxdefendingEffectivePower == defdmg
-								&& maxInitative < initative) {
-							//System.out.println("initative matters");
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						}
-						// }
+						dmg = infection.get(chosen).getNumberOfUnits() * infection.get(chosen).getAttackDamage();
+					}
+					initative = immuneSystem.get(i).getInitiative();
+					defdmg = immuneSystem.get(i).getNumberOfUnits() * immuneSystem.get(i).getAttackDamage();
+					System.out.println("Infection group " + infection.get(chosen).getGroupNr() + " -> "
+							+ immuneSystem.get(i).getGroupNr() + " (" + dmg + " damage) (" + defdmg
+							+ " effective power) (" + initative + " initiative)");
+					if ((maxDamage < dmg) || ((maxDamage == dmg) && (maxdefendingEffectivePower < defdmg))
+							|| ((maxDamage == dmg) && (maxdefendingEffectivePower == defdmg)
+									&& (maxInitative < initative))) {
+						maxDamage = dmg;
+						maxdefendingEffectivePower = defdmg;
+						maxInitative = initative;
+						receiver = i;
 					}
 				}
 				if (receiver < 0) {
 					continue;// no matching valid defenders found
 				}
-				infection.get(chosen).targetSelected = receiver;
-				immuneSystem.get(receiver).targeted = true;
+				infection.get(chosen).setTargetSelected(receiver);
+				immuneSystem.get(receiver).setTargeted(true);
 			} while (chosen >= 0 && receiver >= 0);
 
 			// immune system attacks infection
@@ -192,18 +142,13 @@ public class Dag24 {
 				maxInitative = 0;
 				chosen = -1;
 				for (int i = 0; i < immuneSystem.size(); i++) {
-					dmg = immuneSystem.get(i).numberOfUnits * immuneSystem.get(i).attackDamage;
-					initative = immuneSystem.get(i).initiative;
-					if (immuneSystem.get(i).targetSelected < 0) {// ignore already considered
-						if (maxDamage < dmg) {
-							maxDamage = dmg;
-							maxInitative = initative;
-							chosen = i;
-						} else if (maxDamage == dmg && maxInitative < initative) {
-							maxDamage = dmg;
-							maxInitative = initative;
-							chosen = i;
-						}
+					dmg = immuneSystem.get(i).getNumberOfUnits() * immuneSystem.get(i).getAttackDamage();
+					initative = immuneSystem.get(i).getInitiative();
+					if ((immuneSystem.get(i).getTargetSelected() < 0)
+							&& ((maxDamage < dmg) || ((maxDamage == dmg) && (maxInitative < initative)))) {
+						maxDamage = dmg;
+						maxInitative = initative;
+						chosen = i;
 					}
 				}
 				if (chosen < 0) {
@@ -214,130 +159,122 @@ public class Dag24 {
 				maxInitative = 0;
 				maxdefendingEffectivePower = 0;
 				for (int i = 0; i < infection.size(); i++) {
-					if (infection.get(i).immune1 == immuneSystem.get(chosen).attackType
-							|| infection.get(i).immune2 == immuneSystem.get(chosen).attackType
-							|| infection.get(i).targeted == true) {
-
+					if (infection.get(i).isTargeted()) {
+						continue;
+					}
+					if (infection.get(i).getImmune1() == immuneSystem.get(chosen).getAttackType()
+							|| infection.get(i).getImmune2() == immuneSystem.get(chosen).getAttackType()) {
+						dmg = 0;// this is important not to finish loop to early, need to select something
+					} else if (infection.get(i).getWeakness1() == immuneSystem.get(chosen).getAttackType()
+							|| infection.get(i).getWeakness2() == immuneSystem.get(chosen).getAttackType()) {
+						dmg = immuneSystem.get(chosen).getNumberOfUnits() * immuneSystem.get(chosen).getAttackDamage()
+								* 2;
 					} else {
-						if (infection.get(i).weakness1 == immuneSystem.get(chosen).attackType
-								|| infection.get(i).weakness2 == immuneSystem.get(chosen).attackType) {
-							dmg = immuneSystem.get(chosen).numberOfUnits * immuneSystem.get(chosen).attackDamage * 2;
-						} else {
-							dmg = immuneSystem.get(chosen).numberOfUnits * immuneSystem.get(chosen).attackDamage;
-						}
-						initative = infection.get(i).initiative;
-						defdmg = infection.get(i).numberOfUnits * infection.get(i).attackDamage;
-						System.out.println("Immune    group " + immuneSystem.get(chosen).groupNr + " -> "
-								+ infection.get(i).groupNr + " (" + dmg + " damage) (" + defdmg + " effective power) ("
-								+ initative + " initiative)");
-						// if (dmg > infection.get(i).hitPointsEach) {// if useless just panic
-						if (maxDamage < dmg) {
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						} else if (maxDamage == dmg && maxdefendingEffectivePower < defdmg) {
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						} else if (maxDamage == dmg && maxdefendingEffectivePower == defdmg
-								&& maxInitative < initative) {
-							//System.out.println("initative matters");
-							maxDamage = dmg;
-							maxdefendingEffectivePower = defdmg;
-							maxInitative = initative;
-							receiver = i;
-						}
-						// }
+						dmg = immuneSystem.get(chosen).getNumberOfUnits() * immuneSystem.get(chosen).getAttackDamage();
+					}
+					initative = infection.get(i).getInitiative();
+					defdmg = infection.get(i).getNumberOfUnits() * infection.get(i).getAttackDamage();
+					System.out.println("Immune    group " + immuneSystem.get(chosen).getGroupNr() + " -> "
+							+ infection.get(i).getGroupNr() + " (" + dmg + " damage) (" + defdmg + " effective power) ("
+							+ initative + " initiative)");
+					if ((maxDamage < dmg) || ((maxDamage == dmg) && (maxdefendingEffectivePower < defdmg))
+							|| ((maxDamage == dmg) && (maxdefendingEffectivePower == defdmg)
+									&& (maxInitative < initative))) {
+						maxDamage = dmg;
+						maxdefendingEffectivePower = defdmg;
+						maxInitative = initative;
+						receiver = i;
 					}
 				}
 				if (receiver < 0) {
 					continue;// no matching valid defenders found
 				}
-				immuneSystem.get(chosen).targetSelected = receiver;
-				infection.get(receiver).targeted = true;
+				immuneSystem.get(chosen).setTargetSelected(receiver);
+				infection.get(receiver).setTargeted(true);
 			} while (chosen >= 0 && receiver >= 0);
+
 			System.out.println("---------------------------------------");
+
 			// attacking
 			for (int i = 20; i >= 0; i--) {
-				for (CombatUnit c : immuneSystem) {
-					if (c.initiative == i && c.targetSelected >= 0) {
-						System.out.print("immune -> infection (initiative=" + i + ") group " + c.groupNr + " -> group "
-								+ infection.get(c.targetSelected).groupNr);
+				for (final CombatUnit c : immuneSystem) {
+					if (c.getInitiative() == i && c.getTargetSelected() >= 0) {
+						System.out.print("immune -> infection (initiative=" + i + ") group " + c.getGroupNr()
+								+ " -> group " + infection.get(c.getTargetSelected()).getGroupNr());
 						immuneAttacks(c);
 					}
 				}
-				for (CombatUnit c : infection) {
-					if (c.initiative == i && c.targetSelected >= 0) {
-						System.out.print("infection -> immune (initiative=" + i + ") group " + c.groupNr + " -> group "
-								+ immuneSystem.get(c.targetSelected).groupNr);
+				for (final CombatUnit c : infection) {
+					if (c.getInitiative() == i && c.getTargetSelected() >= 0) {
+						System.out.print("infection -> immune (initiative=" + i + ") group " + c.getGroupNr()
+								+ " -> group " + immuneSystem.get(c.getTargetSelected()).getGroupNr());
 						infectionAttacks(c);
 					}
 				}
 			}
-			// remove dead units, correctly
+			// weed out dead units
 			temp.clear();
-			for (CombatUnit c : immuneSystem) {
-				if (c.numberOfUnits > 0) {
+			for (final CombatUnit c : immuneSystem) {
+				if (c.getNumberOfUnits() > 0) {
 					temp.add(c);
 				}
 			}
 			immuneSystem.clear();
-			for (CombatUnit c : temp) {
+			for (final CombatUnit c : temp) {
 				immuneSystem.add(c);
 			}
 
 			temp.clear();
-			for (CombatUnit c : infection) {
-				if (c.numberOfUnits > 0) {
+			for (final CombatUnit c : infection) {
+				if (c.getNumberOfUnits() > 0) {
 					temp.add(c);
 				}
 			}
 			infection.clear();
-			for (CombatUnit c : temp) {
+			for (final CombatUnit c : temp) {
 				infection.add(c);
 			}
-			// System.out.println("imm " + immuneSystem.size() + " inf" + infection.size());
-		} while (!(immuneSystem.size() == 0 || infection.size() == 0)); // continue until either side is gone
+		} while (!((immuneSystem.size() == 0) || (infection.size() == 0))); // continue until either side is gone
+
 		System.out.println("---------------------------------------");
+
 		// Determine outcome
 		int immuneSum = 0;
-		for (CombatUnit c : immuneSystem) {
-			System.out.println("immune left " + c.numberOfUnits);
-			immuneSum += c.numberOfUnits;
+		for (final CombatUnit c : immuneSystem) {
+			System.out.println("immune left " + c.getNumberOfUnits());
+			immuneSum += c.getNumberOfUnits();
 		}
 		int infectionSum = 0;
-		for (CombatUnit c : infection) {
-			System.out.println("infection left " + c.numberOfUnits);
-			infectionSum += c.numberOfUnits;
+		for (final CombatUnit c : infection) {
+			System.out.println("infection left " + c.getNumberOfUnits());
+			infectionSum += c.getNumberOfUnits();
 		}
 		System.out.println("<20491 >19714 Sum immune " + immuneSum + " sum infection " + infectionSum);
 	}
 
-	private static void infectionAttacks(CombatUnit i) {
+	private static void infectionAttacks(final CombatUnit i) {
 		int dmg, kills;
-		int targetSelected = i.targetSelected;
+		final int targetSelected = i.getTargetSelected();
 		if (targetSelected >= 0) {
-			int AttackingNumberOfUnits = i.numberOfUnits;
-			int hitPointsEach = immuneSystem.get(targetSelected).hitPointsEach;
-			int defendingNumberOfUnits = immuneSystem.get(targetSelected).numberOfUnits;
-			if (immuneSystem.get(targetSelected).weakness1 == i.attackType
-					|| immuneSystem.get(targetSelected).weakness2 == i.attackType) {
-				dmg = i.numberOfUnits * i.attackDamage * 2;
+			final int AttackingNumberOfUnits = i.getNumberOfUnits();
+			final int hitPointsEach = immuneSystem.get(targetSelected).getHitPointsEach();
+			int defendingNumberOfUnits = immuneSystem.get(targetSelected).getNumberOfUnits();
+			if (immuneSystem.get(targetSelected).getWeakness1() == i.getAttackType()
+					|| immuneSystem.get(targetSelected).getWeakness2() == i.getAttackType()) {
+				dmg = i.getNumberOfUnits() * i.getAttackDamage() * 2;
 			} else {
-				dmg = i.numberOfUnits * i.attackDamage;
+				dmg = i.getNumberOfUnits() * i.getAttackDamage();
 			}
 			if (AttackingNumberOfUnits > 0) {
 				kills = 0;
-				while (defendingNumberOfUnits > 0 && dmg >= hitPointsEach) {
+				while ((defendingNumberOfUnits > 0) && (dmg >= hitPointsEach)) {
 					dmg -= hitPointsEach;
 					kills++;
 					defendingNumberOfUnits--;
 				}
 				System.out.println(
-						", (unit count=" + immuneSystem.get(targetSelected).numberOfUnits + ") killing " + kills);
-				immuneSystem.get(targetSelected).numberOfUnits = defendingNumberOfUnits;
+						", (unit count=" + immuneSystem.get(targetSelected).getNumberOfUnits() + ") killing " + kills);
+				immuneSystem.get(targetSelected).setNumberOfUnits(defendingNumberOfUnits);
 			} else {
 				System.out.println(" attackers was killed");
 			}
@@ -346,34 +283,165 @@ public class Dag24 {
 		}
 	}
 
-	private static void immuneAttacks(CombatUnit i) {
+	private static void immuneAttacks(final CombatUnit i) {
 		int dmg, kills;
-		int targetSelected = i.targetSelected;
+		final int targetSelected = i.getTargetSelected();
 		if (targetSelected >= 0) {
-			int AttackingNumberOfUnits = i.numberOfUnits;
-			int hitPointsEach = infection.get(targetSelected).hitPointsEach;
-			int defendingNumberOfUnits = infection.get(targetSelected).numberOfUnits;
-			if (infection.get(targetSelected).weakness1 == i.attackType
-					|| infection.get(targetSelected).weakness2 == i.attackType) {
-				dmg = i.numberOfUnits * i.attackDamage * 2;
+			final int AttackingNumberOfUnits = i.getNumberOfUnits();
+			final int hitPointsEach = infection.get(targetSelected).getHitPointsEach();
+			int defendingNumberOfUnits = infection.get(targetSelected).getNumberOfUnits();
+			if (infection.get(targetSelected).getWeakness1() == i.getAttackType()
+					|| infection.get(targetSelected).getWeakness2() == i.getAttackType()) {
+				dmg = i.getNumberOfUnits() * i.getAttackDamage() * 2;
 			} else {
-				dmg = i.numberOfUnits * i.attackDamage;
+				dmg = i.getNumberOfUnits() * i.getAttackDamage();
 			}
 			if (AttackingNumberOfUnits > 0) {
 				kills = 0;
-				while (defendingNumberOfUnits > 0 && dmg >= hitPointsEach) {
+				while ((defendingNumberOfUnits > 0) && (dmg >= hitPointsEach)) {
 					dmg -= hitPointsEach;
 					kills++;
 					defendingNumberOfUnits--;
 				}
-				System.out
-						.println(", (unit count=" + infection.get(targetSelected).numberOfUnits + ") killing " + kills);
-				infection.get(targetSelected).numberOfUnits = defendingNumberOfUnits;
+				System.out.println(
+						", (unit count=" + infection.get(targetSelected).getNumberOfUnits() + ") killing " + kills);
+				infection.get(targetSelected).setNumberOfUnits(defendingNumberOfUnits);
 			} else {
 				System.out.println(" attackers was killed");
 			}
 		} else {
 			System.out.println(" no attack");
 		}
+	}
+
+}
+
+enum DamageType {
+	RADIATION, BLUDGEONING, FIRE, SLASHING, COLD;
+}
+
+class CombatUnit {
+	private int numberOfUnits, hitPointsEach, attackDamage, initiative, targetSelected = -1, groupNr;
+	private DamageType attackType, weakness1 = null, weakness2 = null, immune1 = null, immune2 = null;
+	private boolean targeted = false;
+
+	public int getNumberOfUnits() {
+		return numberOfUnits;
+	}
+
+	public void setNumberOfUnits(final int numberOfUnits) {
+		this.numberOfUnits = numberOfUnits;
+	}
+
+	public int getHitPointsEach() {
+		return hitPointsEach;
+	}
+
+	public void setHitPointsEach(final int hitPointsEach) {
+		this.hitPointsEach = hitPointsEach;
+	}
+
+	public int getAttackDamage() {
+		return attackDamage;
+	}
+
+	public void setAttackDamage(final int attackDamage) {
+		this.attackDamage = attackDamage;
+	}
+
+	public int getInitiative() {
+		return initiative;
+	}
+
+	public void setInitiative(final int initiative) {
+		this.initiative = initiative;
+	}
+
+	public DamageType getAttackType() {
+		return attackType;
+	}
+
+	public void setAttackType(final DamageType attackType) {
+		this.attackType = attackType;
+	}
+
+	public DamageType getWeakness1() {
+		return weakness1;
+	}
+
+	public void setWeakness1(final DamageType weakness1) {
+		this.weakness1 = weakness1;
+	}
+
+	public DamageType getWeakness2() {
+		return weakness2;
+	}
+
+	public void setWeakness2(final DamageType weakness2) {
+		this.weakness2 = weakness2;
+	}
+
+	public DamageType getImmune1() {
+		return immune1;
+	}
+
+	public void setImmune1(final DamageType immune1) {
+		this.immune1 = immune1;
+	}
+
+	public DamageType getImmune2() {
+		return immune2;
+	}
+
+	public void setImmune2(final DamageType immune2) {
+		this.immune2 = immune2;
+	}
+
+	public int getTargetSelected() {
+		return targetSelected;
+	}
+
+	public void setTargetSelected(final int targetSelected) {
+		this.targetSelected = targetSelected;
+	}
+
+	public boolean isTargeted() {
+		return targeted;
+	}
+
+	public void setTargeted(final boolean targeted) {
+		this.targeted = targeted;
+	}
+
+	public int getGroupNr() {
+		return groupNr;
+	}
+
+	public void setGroupNr(final int groupNr) {
+		this.groupNr = groupNr;
+	}
+
+	public CombatUnit(final int numberOfUnits, final int hitPointsEach, final int attackDamage, final int initiative,
+			final DamageType attackType, final DamageType weakness1, final DamageType weakness2,
+			final DamageType immune1, final DamageType immune2, final int groupNr) {
+		super();
+		this.numberOfUnits = numberOfUnits;
+		this.hitPointsEach = hitPointsEach;
+		this.attackDamage = attackDamage;
+		this.initiative = initiative;
+		this.attackType = attackType;
+		this.weakness1 = weakness1;
+		this.weakness2 = weakness2;
+		this.immune1 = immune1;
+		this.immune2 = immune2;
+		this.groupNr = groupNr;
+	}
+
+	@Override
+	public String toString() {
+		return "CombatUnit [numberOfUnits=" + numberOfUnits + ", hitPointsEach=" + hitPointsEach + ", attackDamage="
+				+ attackDamage + ", initiative=" + initiative + ", attackType=" + attackType + ", weakness1="
+				+ weakness1 + ", weakness2=" + weakness2 + ", immune1=" + immune1 + ", immune2=" + immune2
+				+ ", targetSelected=" + targetSelected + ", targeted=" + targeted + ", groupNr=" + groupNr + "]";
 	}
 }
